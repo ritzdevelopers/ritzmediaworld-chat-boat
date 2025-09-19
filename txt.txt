@@ -1,0 +1,25 @@
+Closing Sessin API ::
+     const res = await axios.post(
+              "https://apis.contenaissance.com/api/v1/session/close",
+              { session_id: sessionId },
+              {
+                headers: {
+                  "X-API-KEY":
+                    "26f8eb961b3d0b30a20b838cad928389aa38397695d78aa3f89f936903f42bce",
+                },
+              }
+            );
+
+
+
+Creating Session API ::
+   const res = await axios.get(
+        "https://apis.contenaissance.com/api/v1/session/create", //close
+        {
+          headers: {
+            "X-API-KEY":
+              "26f8eb961b3d0b30a20b838cad928389aa38397695d78aa3f89f936903f42bce",
+          },
+        }
+      );
+      setSessionId(res.data.session_id);
