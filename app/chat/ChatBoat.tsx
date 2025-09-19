@@ -313,7 +313,7 @@ function ChatBoat() {
   {/* Left Section: Logo + Title */}
   <div className="flex items-center gap-3">
     <img alt="RMW Chat Bot" src="/chat-icn-ui.png" className="w-10 h-10 object-contain" />
-    <h2 className="text-xl font-semibold text-gray-900">RitzBoat</h2>
+    <h2 className="text-xl font-semibold text-gray-900">RitzBOT</h2>
   </div>
 
   {/* Right Section: Scan Button (hidden on mobile) */}
