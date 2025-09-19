@@ -280,12 +280,12 @@ function ChatBoat() {
         <div ref={boatRef} className={styles.chatBoat}>
           {isOpen ? (
             <X
-              className={styles.boatIcon}
+              className={`text-black ${styles.boatIcon}`}
               onClick={() => setIsOpen(false)} // ✅ close chat
             />
           ) : (
             <img
-              src="https://cdn-icons-png.flaticon.com/512/6873/6873405.png"
+              src="/chat-icn-ui.png"
               alt="Chat Icon"
               className={styles.boatGifIcon}
               onClick={openBoat} // only open
@@ -305,19 +305,26 @@ function ChatBoat() {
     ${isSmall ? "right-80 translate-x-1/2" : "left-1/2 -translate-x-1/2"}
   `}
             >
-              <div className="chatBotUi overflow-hidden  flex flex-col justify-between items-center bg-[#E3E3E3] w-full h-full pb-4">
-                {/* This is header of chat bot ui  */}
-                <div className="header w-full h-[4rem] bg-white flex justify-between items-center px-4">
-                  <button className=" px-4 opacity-0 text-white py-2 rounded-4xl  hover:bg-[#215b05] bg-[#1b4307]">
-                    Quick Response
-                  </button>
-                  {!mobileView && (
-                    <Scan
-                      onClick={() => setIsSmall((pr) => !pr)}
-                      className="text-black cursor-pointer hover:text-[#202020] hover:scale-[1.1]"
-                    />
-                  )}
-                </div>
+              <div
+                className={`chatBotUi overflow-hidden  flex flex-col justify-between items-center  w-full h-full pb-4 ${styles.txtureClr}`}
+              >
+             {/* Chat Bot Header */}
+<div className="header w-full h-16 bg-white flex justify-between items-center px-6 border-b border-gray-300 shadow-sm">
+  {/* Left Section: Logo + Title */}
+  <div className="flex items-center gap-3">
+    <img alt="RMW Chat Bot" src="/chat-icn-ui.png" className="w-10 h-10 object-contain" />
+    <h2 className="text-xl font-semibold text-gray-900">RitzBoat</h2>
+  </div>
+
+  {/* Right Section: Scan Button (hidden on mobile) */}
+  {!mobileView && (
+    <Scan
+      onClick={() => setIsSmall((pr) => !pr)}
+      className="text-gray-900 cursor-pointer transition-transform duration-200 hover:text-gray-700 hover:scale-110"
+    />
+  )}
+</div>
+
 
                 {/* This Is Main Area Where All Chat And Other Things Will Show  */}
                 {msgsQue.length === 0 ? (
@@ -334,7 +341,7 @@ function ChatBoat() {
                         />
                       </div>
 
-                      <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                      <h2 className="text-2xl font-bold text-black mb-3">
                         Hi! I&apos;m RitzBOT! <br />A fully-homemade AI
                         Assistant.
                       </h2>
@@ -354,7 +361,7 @@ function ChatBoat() {
                                 )
                               )}
                               key={idx}
-                              className="px-4 cursor-pointer py-2 bg-white border border-gray-300 text-gray-700 rounded-full shadow-sm hover:bg-gray-100 hover:border-gray-400 transition-colors duration-200 text-sm"
+                              className="px-4 cursor-pointer py-2 bg-white border border-gray-300 text-black rounded-full shadow-sm hover:bg-gray-100 hover:border-gray-400 transition-colors duration-200 text-sm"
                             >
                               {btnMsg.msg}
                             </button>
@@ -374,8 +381,8 @@ function ChatBoat() {
                           key={idx}
                           className={`max-w-[70%] px-4 py-2 rounded-lg mb-3 shadow-sm text-sm ${
                             idx % 2 === 0
-                              ? "self-end bg-gray-100 text-gray-800" // left side (other user)
-                              : "self-start bg-blue-500 text-white" // right side (me)
+                              ? "self-end bg-gray-100 text-black" // left side (other user)
+                              : "self-start bg-gray-200 text-black " // right side (me)
                           }`}
                         ></div>
                       ))}
@@ -390,14 +397,13 @@ function ChatBoat() {
                         <div
                           className={`${styles.bounce} ${styles.delay2}`}
                         ></div>
-                        <span className={styles.typingText}>Processing...</span>
                       </div>
                     )}
                   </div>
                 )}
 
                 {/* This is bottom of where user will send inputs  */}
-                <div className="inputArea w-[95%] bg-white h-[4rem] relative overflow-hidden rounded-full">
+                <div className="inputArea w-[95%] bg-white h-[4rem] shadow-2xl relative overflow-hidden border border-gray-400 rounded-full">
                   <textarea
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
