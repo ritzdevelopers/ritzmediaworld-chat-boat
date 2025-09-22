@@ -63,7 +63,7 @@ function ChatBoat() {
         "https://apis.contenaissance.com/api/v1/session/create",
         {
           headers: {
-            "X-API-KEY":
+            "X-API-Key":
               "26f8eb961b3d0b30a20b838cad928389aa38397695d78aa3f89f936903f42bce",
           },
         }
@@ -182,7 +182,7 @@ function ChatBoat() {
       { msg, id: pr.length > 0 ? pr[pr.length - 1].id + 1 : 1 },
     ]);
     setMsg("");
-
+    setSuggestionsQue([]);
     try {
       setResLoader(true);
       const data = { session_id: sessionId, user_input: msg };
@@ -343,12 +343,14 @@ function ChatBoat() {
   const [phone, setPhone] = useState<string>("");
   const [message, setMessages] = useState<string>("");
   const [formLoader, setFormLoader] = useState<boolean>(false);
-  const [countryCode, setCountryCode] = useState<string>("");
+  const [countryCode, setCountryCode] = useState<string>("+91");
   const [modalMsg, setModalMessage] = useState<RESMODAL>({
     status: 200,
     msg: "",
   });
   const submitForm = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log(sessionId);
+
     e.preventDefault();
     try {
       setFormLoader(true);
@@ -369,6 +371,10 @@ function ChatBoat() {
           msg: "Form Submitted!",
         });
       }
+      setUserEmail("");
+      setMessages("");
+      setPhone("");
+      setUserName("");
       setFormLoader(false);
     } catch (error) {
       console.log(error);
@@ -380,15 +386,15 @@ function ChatBoat() {
     }
   };
 
-  const [search, setSearch] = useState("");
+  // const [search, setSearch] = useState("");
 
   // filter country codes based on search
-  const filteredCountries = countryCodeData.filter(
-    (dt) =>
-      dt.name.toLowerCase().includes(search.toLowerCase()) ||
-      dt.code.toLowerCase().includes(search.toLowerCase()) ||
-      dt.dial_code.includes(search)
-  );
+  // const filteredCountries = countryCodeData.filter(
+  //   (dt) =>
+  //     dt.name.toLowerCase().includes(search.toLowerCase()) ||
+  //     dt.code.toLowerCase().includes(search.toLowerCase()) ||
+  //     dt.dial_code.includes(search)
+  // );
 
   // Generative AI Content,
   return (
@@ -472,9 +478,9 @@ function ChatBoat() {
                             <path
                               d="M5 12h14M13 5l7 7-7 7"
                               stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
                             />
                           </svg>
                         </>
@@ -642,6 +648,7 @@ function ChatBoat() {
                       {/* Name */}
                       <input
                         required
+                        value={username}
                         onChange={(e) => setUserName(e.target.value)}
                         type="text"
                         name="name"
@@ -655,38 +662,31 @@ function ChatBoat() {
                         onChange={(e) => setUserEmail(e.target.value)}
                         type="email"
                         name="email"
+                        value={userEmail}
                         placeholder="Email*"
                         pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                         className="w-full p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none focus:border-yellow-400 mb-4 text-black "
                       />
 
                       {/* Phone */}
-                      <div className="flex gap-2 mb-4 -mt-8 items-end">
-                        <div className="relative w-1/3">
-                          <input
-                            type="text"
-                            placeholder="Search..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full opacity-0 p-2 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none text-black rounded-t-md"
-                          />
-                          <select
-                            required
-                            name="countryCode"
-                            value={countryCode}
-                            onChange={(e) => setCountryCode(e.target.value)}
-                            className="w-full p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none text-black "
-                          >
-                            {filteredCountries.map((dt, idx) => (
-                              <option key={idx} value={`+${dt.dial_code}`}>
-                                {dt.dial_code} {dt.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                      <div className="flex gap-2 mb-4 ">
+                        <select
+                          required
+                          name="countryCode"
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          className="w-[127px] w- p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none text-black "
+                        >
+                          {countryCodeData.map((dt, idx) => (
+                            <option key={idx} value={`${dt.dial_code}`}>
+                              {dt.dial_code} {dt.name}
+                            </option>
+                          ))}
+                        </select>
 
                         <input
                           required
+                          value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           type="tel"
                           name="phone"
@@ -698,7 +698,7 @@ function ChatBoat() {
 
                       {/* Message */}
                       <textarea
-                        required
+                        value={message}
                         onChange={(e) => setMessages(e.target.value)}
                         name="message"
                         placeholder="Message*"
