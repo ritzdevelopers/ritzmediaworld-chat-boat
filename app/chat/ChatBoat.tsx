@@ -7,7 +7,13 @@ import { useGSAP } from "@gsap/react";
 import styles from "./page.module.css";
 import axios from "axios";
 import Image from "next/image";
+import countryCodeData from "../../country_code.json";
 
+interface Country {
+  name: string;
+  code: string;
+  dial_code: string;
+}
 interface SpeechRecognitionEvent extends Event {
   resultIndex: number;
   results: Array<{
@@ -373,6 +379,17 @@ function ChatBoat() {
       });
     }
   };
+
+  const [search, setSearch] = useState("");
+
+  // filter country codes based on search
+  const filteredCountries = countryCodeData.filter(
+    (dt) =>
+      dt.name.toLowerCase().includes(search.toLowerCase()) ||
+      dt.code.toLowerCase().includes(search.toLowerCase()) ||
+      dt.dial_code.includes(search)
+  );
+
   // Generative AI Content,
   return (
     <>
@@ -515,19 +532,20 @@ function ChatBoat() {
                 ) : (
                   <div
                     ref={chatReff}
-                    className={`${styles.chatUiScrollBar} w-full chatUiScrollBar pt-2 max-h-[75%] overflow-y-auto msgContainer absolute top-16 flex flex-col gap-4 px-4`}
+                    className={`${styles.chatUiScrollBar} w-full chatUiScrollBar pt-2 max-h-[75%] overflow-y-auto msgContainer absolute msgContainer  top-16 flex flex-col gap-4 px-4`}
                   >
                     {msgsQue.length > 0 &&
                       msgsQue.map((dt, idx) => (
                         <div
-                          dangerouslySetInnerHTML={{ __html: dt.msg }}
                           key={idx}
-                          className={`max-w-[70%] px-4 py-2 rounded-lg mb-3 shadow-sm text-sm ${
-                            idx % 2 === 0
-                              ? "self-end bg-gray-100 text-black" // left side (other user)
-                              : "self-start bg-gray-200 text-black " // right side (me)
-                          }`}
-                        ></div>
+                          className={`max-w-[70%] px-4 py-2 mb-3 rounded-lg shadow-sm text-sm break-words whitespace-pre-wrap 
+          ${
+            idx % 2 === 0
+              ? "self-end bg-gray-100 text-black"
+              : "self-start bg-gray-200 text-black"
+          } prose prose-sm`}
+                          dangerouslySetInnerHTML={{ __html: dt.msg }}
+                        />
                       ))}
                     {suggestionsQues.length > 0 &&
                       suggestionsQues.map((btnMsg, idx) => (
@@ -593,24 +611,25 @@ function ChatBoat() {
                 </div>
 
                 {openForm && (
-                  <div className="frmModal h-full flex flex-col bg-white text-black  absolute top-16 w-full">
-                    <div className=" p-4">
-                      <h2 className="font-bold text-xl">
+                  <div className="frmModal h-full flex flex-col bg-white text-black absolute top-16 w-full">
+                    <div className="p-6 border-b border-gray-200">
+                      <h2 className="font-bold text-2xl ">
                         Please share your details:
                       </h2>
-                      <p className="text-gray-500 text-sm mt-3">
+                      <p className="text-gray-500 text-sm">
                         Kindly provide your basic information so we can reach
-                        out to you easily. Please make sure your email and phone
-                        number are correct to avoid any communication issues.
+                        out to you easily. Please ensure your email and phone
+                        number are correct.
                       </p>
                     </div>
+
                     <form
                       onSubmit={submitForm}
-                      className="w-full  mx-auto p-4  shadow-lg rounded-lg"
+                      className="w-full mx-auto p-6 shadow-lg rounded-xl  bg-white"
                     >
                       {modalMsg && (
                         <div
-                          className={`text-center ${
+                          className={`text-center font-medium ${
                             modalMsg.status === 200
                               ? "text-green-600"
                               : "text-red-500"
@@ -619,6 +638,7 @@ function ChatBoat() {
                           <p>{modalMsg.msg}</p>
                         </div>
                       )}
+
                       {/* Name */}
                       <input
                         required
@@ -626,7 +646,7 @@ function ChatBoat() {
                         type="text"
                         name="name"
                         placeholder="Name*"
-                        className="w-full p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none mb-4 text-black"
+                        className="w-full p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none focus:border-yellow-400 mb-4 text-black "
                       />
 
                       {/* Email */}
@@ -637,21 +657,44 @@ function ChatBoat() {
                         name="email"
                         placeholder="Email*"
                         pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-                        className="w-full p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none mb-4 text-black"
+                        className="w-full p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none focus:border-yellow-400 mb-4 text-black "
                       />
 
                       {/* Phone */}
+                      <div className="flex gap-2 mb-4 -mt-8 items-end">
+                        <div className="relative w-1/3">
+                          <input
+                            type="text"
+                            placeholder="Search..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full opacity-0 p-2 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none text-black rounded-t-md"
+                          />
+                          <select
+                            required
+                            name="countryCode"
+                            value={countryCode}
+                            onChange={(e) => setCountryCode(e.target.value)}
+                            className="w-full p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none text-black "
+                          >
+                            {filteredCountries.map((dt, idx) => (
+                              <option key={idx} value={`+${dt.dial_code}`}>
+                                {dt.dial_code} {dt.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                      {/* Phone Number Input */}
-                      <input
-                        required
-                        onChange={(e) => setPhone(e.target.value)}
-                        type="tel"
-                        name="phone"
-                        placeholder="Phone*"
-                        pattern="^[0-9]{7,14}$"
-                        className="w-full p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none text-black"
-                      />
+                        <input
+                          required
+                          onChange={(e) => setPhone(e.target.value)}
+                          type="tel"
+                          name="phone"
+                          placeholder="Phone*"
+                          pattern="^[0-9]{7,14}$"
+                          className="w-2/3 p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] h-[49px] focus:outline-none text-black "
+                        />
+                      </div>
 
                       {/* Message */}
                       <textarea
@@ -660,16 +703,18 @@ function ChatBoat() {
                         name="message"
                         placeholder="Message*"
                         rows={4}
-                        className="w-full resize-none p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none mb-4 text-black"
+                        className="w-full resize-none p-3 border-b-2 border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none mb-4 text-black "
                       />
 
                       {/* Submit */}
                       <button
                         type="submit"
-                        disabled={formLoader} // prevent double clicks
-                        className={`w-full flex justify-center items-center cursor-pointer 
-    ${formLoader ? "bg-gray-400" : "bg-[#DCA54F] hover:bg-[#b9760c]"} 
-    text-white py-3 rounded-md transition`}
+                        disabled={formLoader}
+                        className={`w-full flex justify-center items-center cursor-pointer py-3  text-white font-medium transition ${
+                          formLoader
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-[#DCA54F] hover:bg-[#b9760c]"
+                        }`}
                       >
                         {formLoader ? (
                           <svg
