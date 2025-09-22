@@ -147,16 +147,22 @@ function ChatBoat() {
 
   const [msg, setMsg] = useState("");
   const [msgsQue, setMsgsQue] = useState<BTNSMSGS[]>([]);
+  const [suggestionsQues, setSuggestionsQue] = useState<BTNSMSGS[]>([]);
   const [btnsQue, setBtnsQue] = useState<BTNSMSGS[]>([
     { id: 1, msg: "Digital Marketing" },
     { id: 2, msg: "Creative Solutions" },
     { id: 3, msg: "Print/Radio Advertising" },
     { id: 4, msg: "Web Design/Tech Solutions" },
+    { id: 5, msg: "Generative AI Content" },
+    { id: 6, msg: "AI Sales Avatar" },
   ]);
   const [resLoader, setResLoader] = useState(false);
   const chatReff = useRef<HTMLDivElement | null>(null);
   const [isAudiable, setIsAudiable] = useState(false);
 
+  interface SUGGESTIONS {
+    text: string;
+  }
   // Auto scroll
   useEffect(() => {
     if (chatReff.current)
@@ -175,7 +181,7 @@ function ChatBoat() {
       setResLoader(true);
       const data = { session_id: sessionId, user_input: msg };
       const res = await axios.post(
-        "https://apis.contenaissance.com/api/v1/chat/",
+        "https://apis.contenaissance.com/api/v1/chat/v2",
         data,
         {
           headers: {
@@ -185,14 +191,70 @@ function ChatBoat() {
         }
       );
       setResLoader(false);
-      if (res.data.response_html) {
+      if (res.data.answer_html) {
+        setSuggestionsQue([]);
         setMsgsQue((pr) => [
           ...pr,
           {
-            msg: res.data.response_html,
+            msg: res.data.answer_html,
             id: pr.length > 0 ? pr[pr.length - 1].id + 1 : 1,
           },
         ]);
+        res.data.suggestions &&
+          res.data.suggestions.map((ob: string, idx: number) => {
+            setSuggestionsQue((prev) => [...prev, { id: idx, msg: ob }]);
+          });
+        new Audio("/msg-receive.mp3").play().catch(() => {});
+      }
+    } catch (err) {
+      console.log(err);
+
+      setResLoader(false);
+      setMsgsQue((pr) => [
+        ...pr,
+        {
+          msg: "Sorry, unable to connect right now. Please try again!",
+          id: pr.length > 0 ? pr[pr.length - 1].id + 1 : 1,
+        },
+      ]);
+      new Audio("/msg-receive.mp3").play().catch(() => {});
+    }
+  };
+
+  const suggestionsHandler = async (msg: string) => {
+    if (!msg) return;
+    setMsgsQue((pr) => [
+      ...pr,
+      { msg, id: pr.length > 0 ? pr[pr.length - 1].id + 1 : 1 },
+    ]);
+
+    try {
+      setResLoader(true);
+      const data = { session_id: sessionId, user_input: msg };
+      const res = await axios.post(
+        "https://apis.contenaissance.com/api/v1/chat/v2",
+        data,
+        {
+          headers: {
+            "X-API-KEY":
+              "26f8eb961b3d0b30a20b838cad928389aa38397695d78aa3f89f936903f42bce",
+          },
+        }
+      );
+      setResLoader(false);
+      if (res.data.answer_html) {
+        setSuggestionsQue([]);
+        setMsgsQue((pr) => [
+          ...pr,
+          {
+            msg: res.data.answer_html,
+            id: pr.length > 0 ? pr[pr.length - 1].id + 1 : 1,
+          },
+        ]);
+        res.data.suggestions &&
+          res.data.suggestions.map((ob: string, idx: number) => {
+            setSuggestionsQue((prev) => [...prev, { id: idx, msg: ob }]);
+          });
         new Audio("/msg-receive.mp3").play().catch(() => {});
       }
     } catch (err) {
@@ -264,8 +326,54 @@ function ChatBoat() {
     }
   }, [isOpen]);
 
+  const [openForm, setOpenForm] = useState(false);
+  interface RESMODAL {
+    status: number;
+    msg: string;
+  }
   // ------------------------- RENDER UI -------------------------
-
+  const [username, setUserName] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [message, setMessages] = useState<string>("");
+  const [formLoader, setFormLoader] = useState<boolean>(false);
+  const [countryCode, setCountryCode] = useState<string>("");
+  const [modalMsg, setModalMessage] = useState<RESMODAL>({
+    status: 200,
+    msg: "",
+  });
+  const submitForm = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      setFormLoader(true);
+      const num = countryCode + phone;
+      const res = await axios.post(
+        "https://apis.contenaissance.com/api/v1/user/update",
+        {
+          session_id: sessionId,
+          name: username,
+          email: userEmail,
+          phone: num,
+          message,
+        }
+      );
+      if (res.status === 200) {
+        setModalMessage({
+          status: 200,
+          msg: "Form Submitted!",
+        });
+      }
+      setFormLoader(false);
+    } catch (error) {
+      console.log(error);
+      setFormLoader(false);
+      setModalMessage({
+        status: 500,
+        msg: "Internal Server Error, Please Try Again",
+      });
+    }
+  };
+  // Generative AI Content,
   return (
     <>
       {/* Full-screen blur backdrop */}
@@ -308,25 +416,63 @@ function ChatBoat() {
               <div
                 className={`chatBotUi overflow-hidden  flex flex-col justify-between items-center  w-full h-full pb-4 ${styles.txtureClr}`}
               >
-             {/* Chat Bot Header */}
-<div className="header w-full h-16 bg-white flex justify-between items-center px-6 border-b border-gray-300 shadow-sm">
-  {/* Left Section: Logo + Title */}
-  <div className="flex items-center gap-3">
-    <img alt="RMW Chat Bot" src="/chat-icn-ui.png" className="w-10 h-10 object-contain" />
-    <h2 className="text-xl font-semibold text-gray-900">RitzBOT</h2>
-  </div>
+                {/* Chat Bot Header */}
+                <div className="header w-full h-16 bg-white flex justify-between items-center px-6 border-b border-gray-300 shadow-sm">
+                  {/* Left Section: Logo + Title */}
+                  <div className="flex items-center gap-3">
+                    <img
+                      alt="RMW Chat Bot"
+                      src="/chat-icn-ui.png"
+                      className="w-10 h-10 object-contain"
+                    />
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      RitzBOT
+                    </h2>
+                  </div>
 
-  {/* Right Section: Scan Button (hidden on mobile) */}
-  {!mobileView && (
-    <Scan
-      onClick={() => setIsSmall((pr) => !pr)}
-      className="text-gray-900 cursor-pointer transition-transform duration-200 hover:text-gray-700 hover:scale-110"
-    />
-  )}
-</div>
+                  {/* Right Section: Scan Button (hidden on mobile) */}
+                  <div className="flex justify-between items-center gap-4">
+                    <button
+                      onClick={() => setOpenForm((pr) => !pr)}
+                      className="inline-flex items-center gap-2 px-6 py-2 rounded-2xl font-semibold text-white shadow-lg
+         bg-gradient-to-b from-[#9c6409] via-[#926e2b] to-[#aa7814]
+         transform transition-transform duration-150 cursor-pointer hover:-translate-x-1 active:translate-y-0.5
+         focus:outline-none focus-visible:ring-4 focus-visible:ring-[#DCA54F]/30 text-sm"
+                    >
+                      {openForm === true ? (
+                        <>
+                          Close Form <X></X>
+                        </>
+                      ) : (
+                        <>
+                          Get In Touch
+                          <svg
+                            className="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M5 12h14M13 5l7 7-7 7"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </>
+                      )}
+                    </button>
 
+                    {!mobileView && (
+                      <Scan
+                        onClick={() => setIsSmall((pr) => !pr)}
+                        className="text-gray-900 cursor-pointer transition-transform duration-200 hover:text-gray-700 hover:scale-110"
+                      />
+                    )}
+                  </div>
+                </div>
 
-                {/* This Is Main Area Where All Chat And Other Things Will Show  */}
                 {msgsQue.length === 0 ? (
                   <div className="w-full flex flex-col items-center justify-center p-8">
                     {/* Greeting Section */}
@@ -355,10 +501,7 @@ function ChatBoat() {
                           btnsQue.map((btnMsg, idx) => (
                             <button
                               onClick={() => (
-                                setMsg(btnMsg.msg),
-                                setBtnsQue((pr) =>
-                                  pr.filter((ob) => ob.id !== btnMsg.id)
-                                )
+                                suggestionsHandler(btnMsg.msg), setBtnsQue([])
                               )}
                               key={idx}
                               className="px-4 cursor-pointer py-2 bg-white border border-gray-300 text-black rounded-full shadow-sm hover:bg-gray-100 hover:border-gray-400 transition-colors duration-200 text-sm"
@@ -386,7 +529,19 @@ function ChatBoat() {
                           }`}
                         ></div>
                       ))}
-
+                    {suggestionsQues.length > 0 &&
+                      suggestionsQues.map((btnMsg, idx) => (
+                        <button
+                          onClick={() => (
+                            suggestionsHandler(btnMsg.msg),
+                            setSuggestionsQue([])
+                          )}
+                          key={idx}
+                          className="px-4 cursor-pointer py-2 bg-white border border-gray-300 text-black rounded-full shadow-sm hover:bg-gray-100 hover:border-gray-400 transition-colors duration-200 text-sm"
+                        >
+                          {btnMsg.msg}
+                        </button>
+                      ))}
                     {/* Loader when bot is responding */}
                     {resLoader && (
                       <div className={`${styles.botMsg} ${styles.loader}`}>
@@ -406,7 +561,7 @@ function ChatBoat() {
                 <div className="inputArea w-[95%] bg-white h-[4rem] shadow-2xl relative overflow-hidden border border-gray-400 rounded-full">
                   <textarea
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
+                      if (e.key === "Enter" && !e.shiftKey && !resLoader) {
                         e.preventDefault(); // prevent new line
                         chattingHandler();
                       }
@@ -426,7 +581,7 @@ function ChatBoat() {
                         onClick={() => setIsAudiable(false)}
                         className="text-white"
                       />
-                    ) : msg !== "" ? (
+                    ) : msg !== "" && !resLoader ? (
                       <Send onClick={chattingHandler} className="text-white" />
                     ) : (
                       <Mic
@@ -436,6 +591,114 @@ function ChatBoat() {
                     )}
                   </div>
                 </div>
+
+                {openForm && (
+                  <div className="frmModal h-full flex flex-col bg-white text-black  absolute top-16 w-full">
+                    <div className=" p-4">
+                      <h2 className="font-bold text-xl">
+                        Please share your details:
+                      </h2>
+                      <p className="text-gray-500 text-sm mt-3">
+                        Kindly provide your basic information so we can reach
+                        out to you easily. Please make sure your email and phone
+                        number are correct to avoid any communication issues.
+                      </p>
+                    </div>
+                    <form
+                      onSubmit={submitForm}
+                      className="w-full  mx-auto p-4  shadow-lg rounded-lg"
+                    >
+                      {modalMsg && (
+                        <div
+                          className={`text-center ${
+                            modalMsg.status === 200
+                              ? "text-green-600"
+                              : "text-red-500"
+                          }`}
+                        >
+                          <p>{modalMsg.msg}</p>
+                        </div>
+                      )}
+                      {/* Name */}
+                      <input
+                        required
+                        onChange={(e) => setUserName(e.target.value)}
+                        type="text"
+                        name="name"
+                        placeholder="Name*"
+                        className="w-full p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none mb-4 text-black"
+                      />
+
+                      {/* Email */}
+                      <input
+                        required
+                        onChange={(e) => setUserEmail(e.target.value)}
+                        type="email"
+                        name="email"
+                        placeholder="Email*"
+                        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                        className="w-full p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none mb-4 text-black"
+                      />
+
+                      {/* Phone */}
+
+                      {/* Phone Number Input */}
+                      <input
+                        required
+                        onChange={(e) => setPhone(e.target.value)}
+                        type="tel"
+                        name="phone"
+                        placeholder="Phone*"
+                        pattern="^[0-9]{7,14}$"
+                        className="w-full p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none text-black"
+                      />
+
+                      {/* Message */}
+                      <textarea
+                        required
+                        onChange={(e) => setMessages(e.target.value)}
+                        name="message"
+                        placeholder="Message*"
+                        rows={4}
+                        className="w-full resize-none p-3 border-b-[2px] border-[#AEAEAE] bg-[#FBFBFB] focus:outline-none mb-4 text-black"
+                      />
+
+                      {/* Submit */}
+                      <button
+                        type="submit"
+                        disabled={formLoader} // prevent double clicks
+                        className={`w-full flex justify-center items-center cursor-pointer 
+    ${formLoader ? "bg-gray-400" : "bg-[#DCA54F] hover:bg-[#b9760c]"} 
+    text-white py-3 rounded-md transition`}
+                      >
+                        {formLoader ? (
+                          <svg
+                            className="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            ></path>
+                          </svg>
+                        ) : (
+                          "Submit"
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
             </div>
           </div>
